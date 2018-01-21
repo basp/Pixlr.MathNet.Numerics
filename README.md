@@ -7,3 +7,11 @@ The main goal of **Pixlr** is to do (reasonably) fast `Bitmap` manipulations in 
 Once you have an instance of this class you get some useful methods to either do some manipulations in place or convert it to a `Matrix<T>` if you really want to do some heavy lifting.
 
 Once you're done with the calculations you can easily convert it back into a `Bitmap` instance for display purposes as well.
+
+```
+var bmp = (Bitmap)Bitmap.FromFile(@"/path/to/bmp");
+using(var data = bmp.Lock())
+{
+    // ...
+}
+```
