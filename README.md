@@ -1,2 +1,2 @@
-# Pixlr.MathNet.Numerics
-Pixlr with full dependency on MathNet.Numerics.
+## Pixlr for MathNet.Numerics
+This is **Pixlr** with a full dependency on the awesome **MathNet.Numerics** library. The obvious difference is that this is not built upon the **Pixlr.Lina** `Vector<T>` and `Matrix<T>` classes.
