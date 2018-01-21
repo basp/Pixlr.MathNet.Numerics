@@ -3,6 +3,7 @@ namespace Pixlr
     using System;
     using System.Drawing;
     using System.Drawing.Imaging;
+    using MathNet.Numerics.LinearAlgebra;
 
     public unsafe class LockedBitmapData : IDisposable
     {
@@ -79,30 +80,30 @@ namespace Pixlr
 
         private const int BytesPerPixel = 3;
 
-        // public Matrix<U> ToMatrix<U>(Func<Color, U> f)
-        //     where U : struct, IEquatable<U>
-        // {
-        //     var m = Matrix.Create<U>(this.data.Height, this.data.Width);
-        //     for (var y = 0; y < this.data.Height; y++)
-        //     {
-        //         var row = this.GetRow(y);
-        //         for (var x = 0; x < this.data.Width; x++)
-        //         {
-        //             var bi = x * BytesPerPixel;
-        //             var gi = bi + 1;
-        //             var ri = bi + 2;
+        public Matrix<U> ToMatrix<U>(Func<Color, U> f)
+            where U : struct, IEquatable<U>, IFormattable
+        {
+            var m = Matrix<U>.Build.Dense(this.data.Height, this.data.Width);
+            for (var y = 0; y < this.data.Height; y++)
+            {
+                var row = this.GetRow(y);
+                for (var x = 0; x < this.data.Width; x++)
+                {
+                    var bi = x * BytesPerPixel;
+                    var gi = bi + 1;
+                    var ri = bi + 2;
 
-        //             var r = row[ri];
-        //             var g = row[gi];
-        //             var b = row[bi];
+                    var r = row[ri];
+                    var g = row[gi];
+                    var b = row[bi];
 
-        //             var u = Color.FromArgb(r, g, b);
-        //             m[y, x] = f(u);
-        //         }
-        //     }
+                    var u = Color.FromArgb(r, g, b);
+                    m[y, x] = f(u);
+                }
+            }
 
-        //     return m;
-        // }
+            return m;
+        }
 
         public void MapInPlace(Func<Color, Color> f)
         {
