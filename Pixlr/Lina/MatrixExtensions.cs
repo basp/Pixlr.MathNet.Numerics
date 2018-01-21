@@ -1,11 +1,35 @@
 namespace Pixlr.Lina
 {
     using System;
+    using System.Collections.Generic;
     using System.Linq;
     using MathNet.Numerics.LinearAlgebra;
 
     public static class MatrixExtensions
     {
+        public static IEnumerable<V> FlatMap<U, V>(this Matrix<U> self, Func<U, V> f)
+              where U : struct, IEquatable<U>, IFormattable
+              => self.EnumerateColumns()
+                  .SelectMany(u => u.Enumerate())
+                  .Select(u => f(u));
+
+        public static Vector<double> Centroid(this Matrix<double> self)
+        {
+            var col = self.EnumerateColumns()
+                .Select(c => c.Centroid())
+                .ToVector()
+                .Centroid();
+
+            var row = self.EnumerateRows()
+                .Select(c => c.Centroid())
+                .ToVector()
+                .Centroid();
+
+            return Vector<double>.Build.Dense(
+                (int)Math.Round(row),
+                (int)Math.Round(col));
+        }
+
         public static IConvolution2D<U> Convolution<U, T>(
             this Matrix<T> self,
             Accumulator<U, T> acc,
