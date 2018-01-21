@@ -10,8 +10,8 @@ namespace Pixlr
 
         public static Color Inv(this Color self) =>
             Color.FromArgb(
-                byte.MaxValue - self.R, 
-                byte.MaxValue - self.R, 
+                byte.MaxValue - self.R,
+                byte.MaxValue - self.R,
                 byte.MaxValue - self.R);
     }
 }
