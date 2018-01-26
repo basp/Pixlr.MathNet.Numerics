@@ -12,6 +12,6 @@ Once you're done with the calculations you can easily convert it back into a `Bi
 var bmp = (Bitmap)Bitmap.FromFile(@"/path/to/bmp");
 using(var data = bmp.Lock())
 {
-    // ...
+    ...
 }
 ```

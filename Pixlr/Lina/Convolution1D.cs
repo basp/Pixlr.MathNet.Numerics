@@ -1,6 +1,7 @@
 namespace Pixlr.Lina
 {
     using System;
+    using System.Threading.Tasks;
     using MathNet.Numerics.LinearAlgebra;
 
     internal class Convolution1D<U, V> : IConvolution1D<U>
@@ -66,7 +67,7 @@ namespace Pixlr.Lina
             {
                 var ii = i + k;                     // calculate inner index
                 var vv = this.v[k + this.vc];       // get weight (v) value from kernel
-                var uv = ii < 0 || ii >= u.Count   // is inner index out of range?
+                var uv = ii < 0 || ii >= u.Count    // is inner index out of range?
                     ? this.factory(i)               // then fake (u) value
                     : u[ii];                        // otherwise source (u) value
 
@@ -79,12 +80,11 @@ namespace Pixlr.Lina
         internal Vector<U> Convolve(Vector<U> u, ConvolutionStrategy1D strat)
         {
             var w = Vector<U>.Build.Dense(strat.TargetLength, _ => default(U));
-            for (var i = strat.StartInclusive; i < strat.StopExclusive; i++)
-            {
+            Parallel.For(strat.StartInclusive, strat.StopExclusive, i => {
                 var s = this.Accumulate(i, u);
                 w[i - strat.StartInclusive] = s;
-            }
-
+            });
+            
             return w;
         }
     }

@@ -1,7 +1,6 @@
 namespace Pixlr.Lina
 {
     using System;
-    using MathNet.Numerics.LinearAlgebra;
 
     internal class ConvolutionStrategy2D
     {
@@ -9,10 +8,10 @@ namespace Pixlr.Lina
         {
         }
 
-        public Vector<int> StartInclusive { get; set; }
+        public Tuple<int, int> StartInclusive { get; set; }
 
-        public Vector<int> StopExclusive { get; set; }
+        public Tuple<int, int> StopExclusive { get; set; }
 
-        public Vector<int> TargetSize { get; set; }
+        public Tuple<int, int> TargetSize { get; set; }
     }
 }

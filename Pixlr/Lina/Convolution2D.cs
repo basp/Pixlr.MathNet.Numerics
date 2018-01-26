@@ -1,6 +1,7 @@
 namespace Pixlr.Lina
 {
     using System;
+    using System.Threading.Tasks;
     using MathNet.Numerics.LinearAlgebra;
 
     internal class Convolution2D<U, V> : IConvolution2D<U>
@@ -8,7 +9,7 @@ namespace Pixlr.Lina
         where V : struct, IEquatable<V>, IFormattable
     {
         private readonly Matrix<V> v;   // kernel   
-        private readonly Vector<int> vc;
+        private readonly Tuple<int, int> vc;
         private readonly Accumulator<U, V> acc;
         private readonly Func<int, int, U> factory;
 
@@ -18,7 +19,7 @@ namespace Pixlr.Lina
             Func<int, int, U> factory)
         {
             this.v = v;
-            this.vc = Vector<int>.Build.Dense(v.RowCount / 2, v.ColumnCount / 2);
+            this.vc = Tuple.Create(v.RowCount / 2, v.ColumnCount / 2);
             this.acc = acc;
             this.factory = factory;
         }
@@ -29,13 +30,13 @@ namespace Pixlr.Lina
             {
                 StartInclusive = this.vc,
 
-                StopExclusive = Vector<int>.Build.Dense(
-                    u.RowCount - this.vc[0],
-                    u.ColumnCount - this.vc[1]),
+                StopExclusive = Tuple.Create(
+                    u.RowCount - this.vc.Item1,
+                    u.ColumnCount - this.vc.Item2),
 
-                TargetSize = Vector<int>.Build.Dense(
-                    u.RowCount - 2 * this.vc[0],
-                    u.ColumnCount - 2 * this.vc[1]),
+                TargetSize = Tuple.Create(
+                    u.RowCount - 2 * this.vc.Item1,
+                    u.ColumnCount - 2 * this.vc.Item2),
             };
 
             return this.Convolve(u, strat);
@@ -45,13 +46,13 @@ namespace Pixlr.Lina
         {
             var strat = new ConvolutionStrategy2D
             {
-                StartInclusive = Vector<int>.Build.Dense(0, 0),
+                StartInclusive = Tuple.Create(0, 0),
 
-                StopExclusive = Vector<int>.Build.Dense(
+                StopExclusive = Tuple.Create(
                     u.RowCount,
                     u.ColumnCount),
 
-                TargetSize = Vector<int>.Build.Dense(
+                TargetSize = Tuple.Create(
                     u.RowCount,
                     u.ColumnCount),
             };
@@ -63,17 +64,17 @@ namespace Pixlr.Lina
         {
             var strat = new ConvolutionStrategy2D
             {
-                StartInclusive = Vector<int>.Build.Dense(
-                    -this.vc[0],
-                    -this.vc[1]),
+                StartInclusive = Tuple.Create(
+                    -this.vc.Item1,
+                    -this.vc.Item2),
 
-                StopExclusive = Vector<int>.Build.Dense(
-                    u.RowCount + this.vc[0],
-                    u.ColumnCount + this.vc[1]),
+                StopExclusive = Tuple.Create(
+                    u.RowCount + this.vc.Item1,
+                    u.ColumnCount + this.vc.Item2),
 
-                TargetSize = Vector<int>.Build.Dense(
-                    u.RowCount + 2 * this.vc[0],
-                    u.ColumnCount + 2 * this.vc[1]),
+                TargetSize = Tuple.Create(
+                    u.RowCount + 2 * this.vc.Item1,
+                    u.ColumnCount + 2 * this.vc.Item2),
             };
 
             return this.Convolve(u, strat);
@@ -82,14 +83,14 @@ namespace Pixlr.Lina
         internal U Accumulate(int row, int col, Matrix<U> u)
         {
             var s = default(U);
-            for (var i = -this.vc[0]; i <= this.vc[0]; i++)
+            for (var i = -this.vc.Item1; i <= this.vc.Item1; i++)
             {
-                for (var j = -this.vc[1]; j <= this.vc[1]; j++)
+                for (var j = -this.vc.Item2; j <= this.vc.Item2; j++)
                 {
                     var ii = row + i;
                     var jj = col + j;
 
-                    var vv = this.v[i + this.vc[0], j + this.vc[1]];
+                    var vv = this.v[i + this.vc.Item1, j + this.vc.Item2];
                     var uv = ii < 0 || ii >= u.RowCount || jj < 0 || jj >= u.ColumnCount
                         ? this.factory(ii, jj)
                         : u[ii, jj];
@@ -104,18 +105,17 @@ namespace Pixlr.Lina
         internal Matrix<U> Convolve(Matrix<U> u, ConvolutionStrategy2D strat)
         {
             var w = Matrix<U>.Build.Dense(
-                strat.TargetSize[0],
-                strat.TargetSize[1],
+                strat.TargetSize.Item1,
+                strat.TargetSize.Item2,
                 (r, c) => default(U));
 
-            for (var r = strat.StartInclusive[0]; r < strat.StopExclusive[0]; r++)
-            {
-                for (var c = strat.StartInclusive[1]; c < strat.StopExclusive[1]; c++)
+            Parallel.For(strat.StartInclusive.Item1, strat.StopExclusive.Item1, r => {
+                for (var c = strat.StartInclusive.Item2; c < strat.StopExclusive.Item2; c++)
                 {
                     var s = this.Accumulate(r, c, u);
-                    w[r - strat.StartInclusive[0], c - strat.StartInclusive[1]] = s;
+                    w[r - strat.StartInclusive.Item1, c - strat.StartInclusive.Item2] = s;
                 }
-            }
+            });
 
             return w;
         }
